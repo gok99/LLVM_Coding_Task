@@ -17,7 +17,7 @@ The goal of this task is gaining exposure to LLVM in general and the LLVM IR. Yo
 To get started, you may refer [this](https://llvm.org/docs/GettingStarted.html) to setup the environment for your LLVM system.
 
 ### Overview
-#### Example 1: For example, consider the `c` program below:
+#### Example 1: For example, consider the C program below:
 ```c
 int main() {
     int num,a,b,c;
