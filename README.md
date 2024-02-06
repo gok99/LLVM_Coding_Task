@@ -1,8 +1,8 @@
 ## LLVM Coding Task
-The goal of this task is gaining exposure to LLVM in general and the LLVM IR. You will implement a simple analysis based on LLVM IR that extracts all the variables in each basic block of a program and stores them in a text file.
+The goal of this task is gaining exposure to LLVM in general and the LLVM IR. You will implement a simple analysis based on LLVM IR that extracts all the variables in each basic block of a program and print them in the terminal.
 
 ### Estimated Effort
-* 30 minutes, if familiar with LLVM IR
+* 30 minutes, if familiar with LLVM IR.
 * 2 - 3 hours, if new to LLVM, most of which is taken to get familiar with LLVM.
 
 
