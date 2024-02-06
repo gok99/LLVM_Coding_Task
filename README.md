@@ -1,5 +1,11 @@
-### LLVM IR
+## LLVM Coding Task
 The goal of this task is gaining exposure to LLVM in general and the LLVM IR. You will implement a simple analysis based on LLVM IR that extracts all the variables in each basic block of a program and stores them in a text file.
+
+### Estimated Effort
+* 30 minutes, if familiar with LLVM IR
+* 2 - 3 hours, if new to LLVM, most of which is taken to get familiar with LLVM.
+
+
 
 ### Useful Links
 * [LLVM IR](https://llvm.org/docs/LangRef.html)
@@ -49,7 +55,7 @@ int main() {
         if (c%5 == 0){
             c=num*2;
         } else {
-            c=num*3
+            c=num*3;
         }
     }
     printf("%d\n",c);
@@ -64,14 +70,37 @@ Simply get all variables in each of the basic blocks:
 * if.else: {c, num}
 * while.end: {c}
 
-### Task
-Your task is to extract the variables that are used in each basic block as shown above. Detailed instructions for the implementation are found as comments in `easy_task.cpp`. Please complete the empty functions in the skeleton code and test it with the examples above. You can create your own functions if you need.
+### Task 1
+Your task is to extract the variables that are used in each basic block as shown above. Detailed instructions for the implementation are found as comments in `VarsAnalysis.cpp`. Please complete the empty functions in the skeleton code and test it with the examples above. You can create your own functions if you need.
 
-Commands for the compilation and execution:
+### Test Steps
+You can use the following commands to test your solution.
+1. Compile `VarsAnalysis.cpp` to an executable file `VarsAnalysis`:
 ```
-$ clang++ ./easy_task.cpp -o easy_task `llvm-config --cxxflags` `llvm-config --ldflags` `llvm-config --libs` -lpthread -lncurses -ldl
+$ clang++ ./VarsAnalysis.cpp -o VarsAnalysis `llvm-config --cxxflags` `llvm-config --ldflags` `llvm-config --libs` -lpthread -lncurses -ldl
+```
+2. Compile the target program `example1.c` or `example2.c` to bitcode files:
+```
 $ clang -fno-discard-value-names -emit-llvm -S -o example1.ll ./example1.c
-$ ./easy_task example1.ll
+```
+3. Execute your program and check the result:
+```
+$ ./VarsAnalysis example1.ll
+```
+Expected analysis results for `example1.c` and `example2.c` should be: (the order does not matter)
+```
+$ ./VarsAnalysis example1.ll
+entry: {num, a, b, c}
+if.then: {c, num}
+if.else: {c}
+
+$ ./VarsAnalysis example2.ll
+entry: {num, a, b, c}
+while.cond: {b, c}
+while.body: {c}
+if.then: {c, num}
+if.else: {c, num}
+while.end: {c}
 ```
 
 ### Hints
@@ -81,7 +110,7 @@ There are some functions that might be useful:
 * `llvm::Instruction *llvm::BasicBlock::getTerminator()`
 * `unsigned int llvm::Instruction::getNumSuccessors() const`
 
-And we have implemented some functions that you can reuse in `easy_task.cpp`:
+And we have implemented some functions that you can reuse in `VarsAnalysis.cpp`:
 ```c
 std::string getSimpleNodeLabel(const BasicBlock *Node)
 std::string getVarName(const Instruction *ins)
