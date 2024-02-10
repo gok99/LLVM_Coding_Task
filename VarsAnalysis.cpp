@@ -27,8 +27,9 @@ std::set<std::string> source_sets = {};
 void cfgTraversal(std::map<std::string, std::set<Instruction *>> *analysisMap, Function *F );
 void printAnalysisMap(std::map<std::string, std::set<Instruction *>> analysisMap);
 
-void readSourceFile(std::string sourcePath){
-  std::ifstream sourceFile;
+void readSourceFile(std::string sourcePath)
+{
+    std::ifstream sourceFile;
     sourceFile.open(sourcePath);
 
     std::string tmpLine;
@@ -69,10 +70,26 @@ std::string getVarName(const Instruction *ins)
   return OS.str();
 }
 
+// Get operand name if load/store operand is an alloca variable
+std::string getOperandName(const llvm::Instruction* I) 
+{
+  const llvm::Value *variable = nullptr;
+  if (auto *storeInst = llvm::dyn_cast<llvm::StoreInst>(I)) {
+    variable = storeInst->getPointerOperand();
+  } else if (auto *loadInst = llvm::dyn_cast<llvm::LoadInst>(I)) {
+    variable = loadInst->getPointerOperand();
+  }
+
+  if (variable && llvm::isa<llvm::AllocaInst>(variable)) {
+    return variable->getName().str();
+  }
+  return "";
+}
+
 int main(int argc, char **argv)
 {
   // Read the IR file.
-  readSourceFile(argv[2]);
+  readSourceFile(argv[1]);
   static LLVMContext Context;
   SMDiagnostic Err;
 
@@ -121,10 +138,33 @@ void cfgTraversal(std::map<std::string, std::set<Instruction *>> *analysisMap, F
   std::pair<BasicBlock *, std::set<Instruction *>> analysisNode = std::make_pair(entryBB, emptySet);
   traversalStack.push(analysisNode);
 
-  while (!traversalStack.empty()){
+  std::set<std::string> seenBlocks{};
+
+  while (!traversalStack.empty()) {
 
     // Please write your code here
+    auto currentNode = traversalStack.top();
+    traversalStack.pop();
+    auto currentBB = currentNode.first;
+    auto currentSet = currentNode.second;
+    seenBlocks.insert(getSimpleNodeLabel(currentBB));
 
+    auto numSucc = currentBB->getTerminator()->getNumSuccessors();
+    for (int i = 0; i < numSucc; i++){
+      auto succBB = currentBB->getTerminator()->getSuccessor(i);
+      if (seenBlocks.find(getSimpleNodeLabel(succBB)) == seenBlocks.end()){
+        traversalStack.emplace(succBB, currentSet);
+      }
+    }
+
+    for (llvm::Instruction &I : *currentBB) {
+      if (llvm::isa<llvm::StoreInst>(&I) || 
+          llvm::isa<llvm::LoadInst>(&I)) {
+        currentSet.insert(&I);
+      }
+    }
+
+    (*analysisMap)[getSimpleNodeLabel(currentBB)] = currentSet;
   }
   
 }
@@ -135,5 +175,21 @@ void printAnalysisMap(std::map<std::string, std::set<Instruction *>> analysisMap
   errs() << "PRINTING ANALYSIS MAP:\n";
 
   // Please write your code here
-
+  for (auto &entry : analysisMap) {
+    cout << entry.first << ": {";
+    std::set<std::string> names;
+    for (auto &ins : entry.second){
+      auto name = getOperandName(ins);
+      // 
+      if (!name.empty() && 
+          name != "retval") {
+        names.insert(name);
+      }
+    }
+    for (auto iter = names.begin(); iter != names.end(); iter++) {
+      if (iter != names.begin()) cout << ", ";
+      cout << *iter;
+    }
+    cout << "}\n";
+  }
 }
