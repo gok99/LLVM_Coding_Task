@@ -153,7 +153,7 @@ void cfgTraversal(std::map<std::string, std::set<Instruction *>> *analysisMap, F
     for (int i = 0; i < numSucc; i++){
       auto succBB = currentBB->getTerminator()->getSuccessor(i);
       if (seenBlocks.find(getSimpleNodeLabel(succBB)) == seenBlocks.end()){
-        traversalStack.emplace(succBB, currentSet);
+        traversalStack.emplace(succBB, emptySet);
       }
     }
 
@@ -180,7 +180,8 @@ void printAnalysisMap(std::map<std::string, std::set<Instruction *>> analysisMap
     std::set<std::string> names;
     for (auto &ins : entry.second){
       auto name = getOperandName(ins);
-      // 
+      // assume variables aren't called "retval"
+      // (this seems to generally hold true - clang renames variables named retval)
       if (!name.empty() && 
           name != "retval") {
         names.insert(name);
